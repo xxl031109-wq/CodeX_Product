@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Signal Garden</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%2307111f'/%3E%3Cg fill='%237ef2d4'%3E%3Ccircle cx='20' cy='20' r='6'/%3E%3Ccircle cx='32' cy='32' r='6'/%3E%3Ccircle cx='44' cy='20' r='6'/%3E%3Ccircle cx='44' cy='44' r='6'/%3E%3C/g%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="background-glow background-glow-left"></div>
+    <div class="background-glow background-glow-right"></div>
+
+    <main class="app-shell">
+      <section class="hero-panel">
+        <div class="hero-copy">
+          <p class="eyebrow">Inspired by GitHub experiments in Conway-style worlds</p>
+          <h1>Signal Garden</h1>
+          <p class="lede">
+            Paint living cells, bend the rules, and shuttle patterns between
+            experiments with a richer cellular automata studio.
+          </p>
+        </div>
+
+        <div class="stats-grid">
+          <article class="stat-card">
+            <span class="stat-label">Generation</span>
+            <strong class="stat-value" id="generationValue">0</strong>
+          </article>
+          <article class="stat-card">
+            <span class="stat-label">Population</span>
+            <strong class="stat-value" id="populationValue">0</strong>
+          </article>
+          <article class="stat-card">
+            <span class="stat-label">Activity</span>
+            <strong class="stat-value" id="activityValue">idle</strong>
+          </article>
+        </div>
+
+        <div class="control-columns">
+          <section class="control-card">
+            <div class="control-header">
+              <h2>Simulation</h2>
+              <p id="ruleDescription">
+                Balanced growth with familiar Conway life rules.
+              </p>
+            </div>
+
+            <label class="control-field">
+              <span>Rule Set</span>
+              <select id="ruleSelect"></select>
+            </label>
+
+            <label class="control-field">
+              <span>Boundary</span>
+              <select id="edgeSelect">
+                <option value="bounded">Finite edges</option>
+                <option value="wrap">Wraparound torus</option>
+              </select>
+            </label>
+
+            <p class="inline-note" id="ruleMeta">Notation B3/S23 - Finite edges</p>
+
+            <label class="control-field">
+              <span>Preset Pattern</span>
+              <select id="presetSelect"></select>
+            </label>
+
+            <div class="button-row">
+              <button id="playButton" class="primary-button" type="button">Start</button>
+              <button id="stepButton" class="ghost-button" type="button">Step</button>
+              <button id="clearButton" class="ghost-button" type="button">Clear</button>
+              <button id="randomButton" class="ghost-button" type="button">Randomize</button>
+            </div>
+          </section>
+
+          <section class="control-card">
+            <div class="control-header">
+              <h2>Brush</h2>
+              <p>Draw directly on the field, or remove cells to carve paths.</p>
+            </div>
+
+            <label class="control-field">
+              <span>Tool</span>
+              <select id="toolSelect">
+                <option value="draw">Add cells</option>
+                <option value="erase">Erase cells</option>
+              </select>
+            </label>
+
+            <label class="control-field">
+              <span>Speed</span>
+              <div class="range-with-value">
+                <input
+                  id="speedRange"
+                  type="range"
+                  min="2"
+                  max="30"
+                  step="1"
+                  value="10"
+                />
+                <strong id="speedValue">10 tps</strong>
+              </div>
+            </label>
+
+            <label class="control-field">
+              <span>Seed Density</span>
+              <div class="range-with-value">
+                <input
+                  id="densityRange"
+                  type="range"
+                  min="4"
+                  max="45"
+                  step="1"
+                  value="16"
+                />
+                <strong id="densityValue">16%</strong>
+              </div>
+            </label>
+
+            <label class="control-field">
+              <span>Palette</span>
+              <select id="themeSelect">
+                <option value="signal">Signal Bloom</option>
+                <option value="ember">Ember Circuit</option>
+                <option value="lagoon">Lagoon Static</option>
+              </select>
+            </label>
+          </section>
+
+          <section class="control-card">
+            <div class="control-header">
+              <h2>Pattern Atlas</h2>
+              <p>
+                Browse a curated library of gliders, oscillators, methuselahs,
+                and signal toys without memorizing their names first.
+              </p>
+            </div>
+
+            <label class="control-field">
+              <span>Search Atlas</span>
+              <input
+                id="atlasSearchInput"
+                type="text"
+                spellcheck="false"
+                autocomplete="off"
+                placeholder="Search glider, oscillator, methuselah..."
+              />
+            </label>
+
+            <p class="inline-note" id="atlasSummary">Loading atlas...</p>
+            <div class="atlas-list" id="atlasList"></div>
+          </section>
+
+          <section class="control-card">
+            <div class="control-header">
+              <h2>Rule Lab</h2>
+              <p>Type a B/S notation to evolve your own life-like rules on the fly.</p>
+            </div>
+
+            <label class="control-field">
+              <span>Custom Rule</span>
+              <div class="input-row">
+                <input
+                  id="customRuleInput"
+                  type="text"
+                  value="B3/S23"
+                  spellcheck="false"
+                  autocomplete="off"
+                />
+                <button id="applyRuleButton" class="ghost-button" type="button">Apply</button>
+              </div>
+            </label>
+
+            <p class="inline-feedback" id="ruleFeedback">
+              Use formats like <code>B36/S23</code> or <code>23/3</code>.
+            </p>
+          </section>
+
+          <section class="control-card">
+            <div class="control-header">
+              <h2>Share Seed</h2>
+              <p>
+                Export the live cluster as classic RLE, or paste RLE from another
+                Life tool to load it here.
+              </p>
+            </div>
+
+            <label class="control-field">
+              <span>Pattern Code</span>
+              <textarea
+                id="seedCodeInput"
+                rows="7"
+                spellcheck="false"
+                placeholder="x = 3, y = 3, rule = B3/S23&#10;bo$2bo$3o!"
+              ></textarea>
+            </label>
+
+            <div class="button-row button-row-quad">
+              <button id="exportSeedButton" class="ghost-button" type="button">
+                Export RLE
+              </button>
+              <button id="copySeedButton" class="ghost-button" type="button">Copy</button>
+              <button id="shareLinkButton" class="ghost-button" type="button">
+                Share Link
+              </button>
+              <button id="loadSeedButton" class="primary-button" type="button">
+                Load RLE
+              </button>
+            </div>
+
+            <p class="inline-feedback" id="seedFeedback">
+              RLE keeps patterns portable across Conway Life ecosystems.
+            </p>
+          </section>
+
+          <section class="control-card">
+            <div class="control-header">
+              <h2>Pattern Vault</h2>
+              <p>
+                Save named snapshots in this browser, reload them later, and
+                build up your own little automata archive.
+              </p>
+            </div>
+
+            <label class="control-field">
+              <span>Snapshot Name</span>
+              <div class="input-row">
+                <input
+                  id="vaultNameInput"
+                  type="text"
+                  spellcheck="false"
+                  autocomplete="off"
+                  placeholder="Nebula drift test"
+                />
+                <button id="savePatternButton" class="ghost-button" type="button">
+                  Save Slot
+                </button>
+              </div>
+            </label>
+
+            <div class="vault-list" id="vaultList"></div>
+
+            <p class="inline-feedback" id="vaultFeedback">
+              Saved patterns stay in this browser via local storage.
+            </p>
+          </section>
+        </div>
+
+        <section class="hint-card">
+          <h2>Tips</h2>
+          <ul>
+            <li>Click and drag over the canvas to sketch your own colonies.</li>
+            <li>Press <kbd>Space</kbd> to play or pause, <kbd>C</kbd> to clear, and <kbd>R</kbd> to randomize.</li>
+            <li>Switch between finite and wraparound edges to change how gliders behave at the borders.</li>
+            <li>Use Share Link for portable URLs, or Pattern Vault when you want a local library of favorites.</li>
+          </ul>
+        </section>
+      </section>
+
+      <section class="stage-panel">
+        <div class="stage-header">
+          <div>
+            <p class="eyebrow">Live Field</p>
+            <h2>Growth Chamber</h2>
+          </div>
+          <p class="stage-note">
+            Sculpt a seed, mutate its rules, then export the result as a portable RLE artifact.
+          </p>
+        </div>
+
+        <div class="canvas-frame">
+          <canvas id="worldCanvas" aria-label="Signal Garden simulation canvas"></canvas>
+          <div class="canvas-overlay">
+            <span id="statusBadge">Paused</span>
+            <span id="ruleBadge">B3/S23</span>
+            <span id="sizeBadge">0 x 0</span>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
